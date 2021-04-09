@@ -1,0 +1,27 @@
+{
+  "name": "Lin-Transceiver",
+  "version": "0.0.1",
+  "description": "utilizes a LIN Transceiver TJA1020: Sleep / NormalSlope / LowSlope",
+  "keywords": [
+    "TJA1020",
+    "LIN",
+    "Lin-Bus"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mestrode/Lin-Transceiver-Library"
+  },
+  "authors": [
+    {
+      "name": "mestrode",
+      "maintainer": true
+    }
+  ],
+  "license": "GPL-2.0-only",
+  "dependencies": [
+    {
+      "name": "LIN-Interface",
+      "version": "https://github.com/mestrode/LIN-Interface-Library.git"
+    }
+  ]
+}
