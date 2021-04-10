@@ -1,10 +1,20 @@
 # LIN-Transceiver-Library (TJA1020)
 
-Extends the Lin-Interface class and ensure the TJA1020 statemachine will be served in the correct way
+Using a LIN Bus via TJA1020 Transceiver needs to handle the statemachine bevor you will be able to send or receive data from the bus. This is encapsulated within this class.
 
-example:
+# dependencies
 
-    #include "TJA1020.h"
+This library extends the Lin-Interface Library:
+https://github.com/mestrode/Lin-Interface-Library
+
+# example
+Take a look into the basic example.
+
+Library should work like the Lin-Interface Library, but considers the statemachine in every readFrame and writeFrame method.
+You can also control the statemachine, eg. the default slope mode.
+
+```cpp
+    #include "TJA1020.hpp"
 
     #define LIN_SERIAL_SPEED 19200
     #define lin_NSLP_Pin 32
@@ -14,20 +24,28 @@ example:
 
     void setup()
     {
-
+        // use LowSlope mode all the time
+        LinBus.Slope(LinBus.LowSlope);
     }
 
-    void loop()
+    uint8_t getData()
     {
         uint8_t data = 0x00;
 
-        // Read Frame FID = 0x20
+        // Read Frame ID = 0x20
         if (LinBus.readFrame(0x20))
         {
             // Read succesfull
-            data = LinBus.LinMessage[0];
+            data = LinBus.LinMessage[0]; // only consider byte 0 of the received data
         }
 
-        // let LIN-Tranceiver sleep
+        // let LIN-Tranceiver sleep --> changes also the INH Pin of the TJA1020
         LinBus.setMode(LinBus.Sleep);
+
+        return data;
     }
+```
+
+# see also
+
+* Datasheet of TJA1020 https://www.nxp.com/docs/en/data-sheet/TJA1020.pdf
