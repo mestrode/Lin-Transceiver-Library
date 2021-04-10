@@ -11,7 +11,7 @@
 #pragma once
 
 // #include <Arduino.h>
-#include <Lin-Interface.hpp>
+#include <Lin_Interface.hpp>
 
 class Lin_TJA1020 : public Lin_Interface
 {

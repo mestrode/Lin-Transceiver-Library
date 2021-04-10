@@ -10,7 +10,7 @@
 
 #include "TJA1020.hpp"
 
-#include <Lin-Interface.hpp>
+#include <Lin_Interface.hpp>
 // #include <Arduino.h>
 
 //-----------------------------------------------------------------------------
