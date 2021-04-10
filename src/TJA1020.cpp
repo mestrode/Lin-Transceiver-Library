@@ -92,7 +92,7 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
     // see "setMode(sleep)" in the switch below
     if (mode == _currentMode)
     {
-        break;
+        return;
     }
 
     pinMode(_tx_pin, OUTPUT);   //  TX  Signal to LIN Tranceiver
