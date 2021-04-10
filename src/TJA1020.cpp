@@ -85,7 +85,7 @@ void Lin_TJA1020::writeFrameClassic(uint8_t FrameID, size_t size)
 /// does control sequences to switch from one to another operational mode of the chip
 /// NormalSlope, LowSlope for writing operation;
 /// Sleep will release INH and may disables Power-Supply
-/// @param newMode TJA1020 Mode to be the next
+/// @param mode TJA1020 Mode to be the next
 void Lin_TJA1020::setMode(TJA1020_Mode mode)
 {
     // we don't need to act, if we're allready there

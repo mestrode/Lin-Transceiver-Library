@@ -28,8 +28,6 @@ public:
     void writeFrame(uint8_t FrameID, size_t size);
     void writeFrameClassic(uint8_t FrameID, size_t size);
 
-    /// returns the current mode of TJA1020 chip
-    TJA1020_Mode getMode();
     /// switches the operational mode of TJA1020 chip
     /// @param mode target mode
     void setMode(TJA1020_Mode mode);
