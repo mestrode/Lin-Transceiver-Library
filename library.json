@@ -21,7 +21,7 @@
   "dependencies": [
     {
       "name": "Lin-Interface",
-      "version": "https://github.com/mestrode/LIN-Interface-Library.git"
+      "version": "https://github.com/mestrode/LIN-Interface-Library"
     }
   ]
 }
