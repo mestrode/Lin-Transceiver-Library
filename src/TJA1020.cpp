@@ -139,6 +139,9 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         digitalWrite(_nslp_pin, HIGH);
         delayMicroseconds(15); // ensure t_gotonorm (min. 10us)
 
+        // release tx pin, to avoid occupation of Lin Bus
+        digitalWrite(_tx_pin, HIGH);
+
         // [Low Slope Mode] reached
         _currentMode = LowSlope;
         break;
@@ -157,10 +160,15 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         delayMicroseconds(15); //  ensure t_gotosleep (min. 10us)
         digitalWrite(_nslp_pin, LOW);
         delayMicroseconds(15); // ensure t_gotonorm (min. 10us)
-        break;
+        // INH will be shut down by constant low, chip will go into sleep mode
+
+        // ensure pin level while sleeping
+        pinMode(_tx_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
+        pinMode(_nslp_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode
 
         // [Sleep] reached
         _currentMode = Sleep;
+        break;
     }
 } // void Lin_TJA1020::setMode(TJA1020_Mode newMode)
 
