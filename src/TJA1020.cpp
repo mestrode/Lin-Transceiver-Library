@@ -28,6 +28,14 @@
     #ifndef TX2
     #define TX2 17
     #endif
+#elif ESP8266
+    #ifndef TX0
+    #define TX0 1
+    #endif
+
+    #ifndef TX1
+    #define TX1 15
+    #endif
 #else
     #error "Need Pin definitions for LIN Transceiver"
 #endif
@@ -47,9 +55,11 @@ Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t nslpPin) : Lin_Inte
     if(uart_nr == 1) {
         _tx_pin = TX1;
     }
+#ifdef ESP32
     if(uart_nr == 2) {
         _tx_pin = TX2;
     }
+#endif
     //############
 
     // use default baud rate, if not specified
@@ -163,8 +173,13 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         // INH will be shut down by constant low, chip will go into sleep mode
 
         // ensure pin level while sleeping
+#ifdef ESP32
         pinMode(_tx_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
         pinMode(_nslp_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode
+#else
+        pinMode(_tx_pin, INPUT); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
+        pinMode(_nslp_pin, INPUT); // ensure Low level while in sleep mode
+#endif
 
         // [Sleep] reached
         _currentMode = Sleep;
