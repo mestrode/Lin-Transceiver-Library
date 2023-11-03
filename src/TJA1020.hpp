@@ -37,6 +37,5 @@ public:
 private:
     TJA1020_Mode _writingSlope = NormalSlope;
     TJA1020_Mode _currentMode = Sleep;
-    int8_t _tx_pin;
     int8_t _nslp_pin;
 };

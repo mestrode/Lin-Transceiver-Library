@@ -14,56 +14,19 @@
 // #include <Arduino.h>
 
 //-----------------------------------------------------------------------------
-// Pin definitions, we need the TX Pin to control the TJA1020 statemachine
-// See "HardwareSerial.cpp"
-#ifdef ESP32
-    #ifndef TX0
-    #define TX0 1
-    #endif
-
-    #ifndef TX1
-    #define TX1 10
-    #endif
-
-    #ifndef TX2
-    #define TX2 17
-    #endif
-#elif ESP8266
-    #ifndef TX0
-    #define TX0 1
-    #endif
-
-    #ifndef TX1
-    #define TX1 15
-    #endif
-#else
-    #error "Need Pin definitions for LIN Transceiver"
-#endif
-
-//-----------------------------------------------------------------------------
 // constructor
 
 /// Provides HW UART via TJA1020 Chip
 Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t nslpPin) : Lin_Interface(uart_nr)
 {
-    // Use typical pin configuration if interfaced by uart_nr
-    //############
-    // See "HardwareSerial.cpp"
-    if(uart_nr == 0) {
-        _tx_pin = TX0;
-    }
-    if(uart_nr == 1) {
-        _tx_pin = TX1;
-    }
-#ifdef ESP32
-    if(uart_nr == 2) {
-        _tx_pin = TX2;
-    }
-#endif
-    //############
-
-    // use default baud rate, if not specified
+    //  use default baud rate, if not specified
     Lin_Interface::baud = _baud ? _baud : 19200;
+
+    // Retrieve the default UART RX and TX pins
+    HardwareSerial::begin(baud, SERIAL_8N1);
+    rxPin = _rxPin;
+    txPin = _txPin;
+    HardwareSerial::end();
 
     _nslp_pin = nslpPin;
 }
@@ -105,7 +68,7 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         return;
     }
 
-    pinMode(_tx_pin, OUTPUT);   //  TX  Signal to LIN Tranceiver
+    pinMode(txPin, OUTPUT);   //  TX  Signal to LIN Tranceiver
     pinMode(_nslp_pin, OUTPUT); // /SLP Signal to LIN Tranceiver
 
     // Statemachine des TJA1020 von [SLEEP] nach [NORMAL SLOPE MODE] ändern
@@ -119,7 +82,7 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         }
 
         // rising edge on /SLP while TXD = 1
-        digitalWrite(_tx_pin, HIGH);
+        digitalWrite(txPin, HIGH);
         delayMicroseconds(10); // ensure signal to settle
 
         // create rising edge
@@ -140,7 +103,7 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         }
 
         // rising edge on /SLP while TXD = 0
-        digitalWrite(_tx_pin, LOW);
+        digitalWrite(txPin, LOW);
         delayMicroseconds(10); // ensure signal to settle
 
         // create rising edge
@@ -150,7 +113,7 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         delayMicroseconds(15); // ensure t_gotonorm (min. 10us)
 
         // release tx pin, to avoid occupation of Lin Bus
-        digitalWrite(_tx_pin, HIGH);
+        digitalWrite(txPin, HIGH);
 
         // [Low Slope Mode] reached
         _currentMode = LowSlope;
@@ -162,7 +125,7 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
         setMode(_writingSlope);
 
         // rising edge on /SLP while TXD = 1
-        digitalWrite(_tx_pin, HIGH);
+        digitalWrite(txPin, HIGH);
         delayMicroseconds(10); // ensure signal to settle
 
         // create falling edge
@@ -174,10 +137,10 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
 
         // ensure pin level while sleeping
 #ifdef ESP32
-        pinMode(_tx_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
+        pinMode(txPin, INPUT_PULLDOWN); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
         pinMode(_nslp_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode
 #else
-        pinMode(_tx_pin, INPUT); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
+        pinMode(txPin, INPUT); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
         pinMode(_nslp_pin, INPUT); // ensure Low level while in sleep mode
 #endif
 
