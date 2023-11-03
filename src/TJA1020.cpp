@@ -19,7 +19,7 @@
 /// Provides HW UART via TJA1020 Chip
 Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t nslpPin) : Lin_Interface(uart_nr)
 {
-    //  use default baud rate, if not specified
+    // use default baud rate, if not specified
     Lin_Interface::baud = _baud ? _baud : 19200;
 
     // Retrieve the default UART RX and TX pins
