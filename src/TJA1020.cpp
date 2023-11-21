@@ -14,56 +14,17 @@
 // #include <Arduino.h>
 
 //-----------------------------------------------------------------------------
-// Pin definitions, we need the TX Pin to control the TJA1020 statemachine
-// See "HardwareSerial.cpp"
-#ifdef ESP32
-    #ifndef TX0
-    #define TX0 1
-    #endif
-
-    #ifndef TX1
-    #define TX1 10
-    #endif
-
-    #ifndef TX2
-    #define TX2 17
-    #endif
-#elif ESP8266
-    #ifndef TX0
-    #define TX0 1
-    #endif
-
-    #ifndef TX1
-    #define TX1 15
-    #endif
-#else
-    #error "Need Pin definitions for LIN Transceiver"
-#endif
-
-//-----------------------------------------------------------------------------
 // constructor
 
 /// Provides HW UART via TJA1020 Chip
-Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t nslpPin) : Lin_Interface(uart_nr)
+Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin, int8_t nslpPin) : Lin_Interface(uart_nr)
 {
-    // Use typical pin configuration if interfaced by uart_nr
-    //############
-    // See "HardwareSerial.cpp"
-    if(uart_nr == 0) {
-        _tx_pin = TX0;
-    }
-    if(uart_nr == 1) {
-        _tx_pin = TX1;
-    }
-#ifdef ESP32
-    if(uart_nr == 2) {
-        _tx_pin = TX2;
-    }
-#endif
-    //############
+    _tx_pin = txPin;
 
     // use default baud rate, if not specified
     Lin_Interface::baud = _baud ? _baud : 19200;
+    Lin_Interface::rxPin = rxPin;
+    Lin_Interface::txPin = txPin;
 
     _nslp_pin = nslpPin;
 }

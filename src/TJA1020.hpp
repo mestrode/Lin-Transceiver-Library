@@ -21,7 +21,7 @@ public:
     /// @param uart_nr Index of HW UART to be used (0..2)
     /// @param baud Baud rate for RX/TX (0 = default 19200 baud)
     /// @param nslpPin /SLP Pin to control TJA1020
-    Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t nslpPin);
+    Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin, int8_t nslpPin);
 
     bool readFrame(uint8_t FrameID);
     void writeFrame(uint8_t FrameID, size_t size);
