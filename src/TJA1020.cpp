@@ -13,20 +13,20 @@
 #include <Lin_Interface.hpp>
 // #include <Arduino.h>
 
+constexpr auto BAUD_DEFAULT = 19200;
+
 //-----------------------------------------------------------------------------
 // constructor
 
 /// Provides HW UART via TJA1020 Chip
-Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin, int8_t nslpPin) : Lin_Interface(uart_nr)
+Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin, int8_t nslpPin) : Lin_Interface(uart_nr),
+    _tx_pin(txPin),
+    _nslp_pin(nslpPin)
 {
-    _tx_pin = txPin;
-
     // use default baud rate, if not specified
-    Lin_Interface::baud = _baud ? _baud : 19200;
+    Lin_Interface::baud = _baud ? _baud : BAUD_DEFAULT;
     Lin_Interface::rxPin = rxPin;
     Lin_Interface::txPin = txPin;
-
-    _nslp_pin = nslpPin;
 }
 
 //-----------------------------------------------------------------------------

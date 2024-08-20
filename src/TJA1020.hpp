@@ -15,7 +15,11 @@
 class Lin_TJA1020 : public Lin_Interface
 {
 public:
-    enum TJA1020_Mode { Sleep, NormalSlope, LowSlope };
+    enum TJA1020_Mode {
+        Sleep,
+        NormalSlope,
+        LowSlope
+    };
 
     /// provides HW-Lin Interface via TJA1020 Chip
     /// @param uart_nr Index of HW UART to be used (0..2)
