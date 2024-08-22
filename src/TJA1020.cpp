@@ -19,7 +19,7 @@ constexpr auto BAUD_DEFAULT = 19200;
 // constructor
 
 /// Provides HW UART via TJA1020 Chip
-Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin, int8_t nslpPin) : Lin_Interface(uart_nr),
+Lin_TJA1020::Lin_TJA1020(const int uart_nr, const uint32_t _baud, const int8_t rxPin, const int8_t txPin, const int8_t nslpPin) : Lin_Interface(uart_nr),
     _tx_pin(txPin),
     _nslp_pin(nslpPin)
 {
@@ -33,21 +33,21 @@ Lin_TJA1020::Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin
 // write / read  on bus
 
 /// Requests a Lin 2.0 Frame
-bool Lin_TJA1020::readFrame(uint8_t FrameID)
+bool Lin_TJA1020::readFrame(const uint8_t FrameID)
 {
     setMode(_writingSlope);
     return Lin_Interface::readFrame(FrameID);
 }
 
 /// Sends a Lin 2.0 Frame
-void Lin_TJA1020::writeFrame(uint8_t FrameID, size_t size)
+void Lin_TJA1020::writeFrame(const uint8_t FrameID, const size_t size)
 {
     setMode(_writingSlope);
     return Lin_Interface::writeFrame(FrameID, size);
 }
 
 /// Sends a Lin 1.3 Frame (Legacy Checksum)
-void Lin_TJA1020::writeFrameClassic(uint8_t FrameID, size_t size)
+void Lin_TJA1020::writeFrameClassic(const uint8_t FrameID, const size_t size)
 {
     setMode(_writingSlope);
     Lin_Interface::writeFrameClassic(FrameID, size);
@@ -57,7 +57,7 @@ void Lin_TJA1020::writeFrameClassic(uint8_t FrameID, size_t size)
 /// NormalSlope, LowSlope for writing operation;
 /// Sleep will release INH and may disables Power-Supply
 /// @param mode TJA1020 Mode to be the next
-void Lin_TJA1020::setMode(TJA1020_Mode mode)
+void Lin_TJA1020::setMode(const TJA1020_Mode mode)
 {
     // we don't need to act, if we're allready there
     // see "setMode(sleep)" in the switch below
@@ -149,9 +149,10 @@ void Lin_TJA1020::setMode(TJA1020_Mode mode)
 } // void Lin_TJA1020::setMode(TJA1020_Mode newMode)
 
 /// Defines standard slope, to be used, when writing to the bus
-void Lin_TJA1020::setSlope(TJA1020_Mode slope) {
+void Lin_TJA1020::setSlope(const TJA1020_Mode slope) {
   _writingSlope = slope;
-  if (_writingSlope == Sleep) {
+  if (_writingSlope == Sleep)
+  {
       _writingSlope = NormalSlope;
   }
 }

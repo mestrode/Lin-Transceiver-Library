@@ -25,18 +25,18 @@ public:
     /// @param uart_nr Index of HW UART to be used (0..2)
     /// @param baud Baud rate for RX/TX (0 = default 19200 baud)
     /// @param nslpPin /SLP Pin to control TJA1020
-    Lin_TJA1020(int uart_nr, uint32_t _baud, int8_t rxPin, int8_t txPin, int8_t nslpPin);
+    Lin_TJA1020(const int uart_nr, const uint32_t _baud, const int8_t rxPin, const int8_t txPin, const int8_t nslpPin);
 
-    bool readFrame(uint8_t FrameID);
-    void writeFrame(uint8_t FrameID, size_t size);
-    void writeFrameClassic(uint8_t FrameID, size_t size);
+    bool readFrame(const uint8_t FrameID);
+    void writeFrame(const uint8_t FrameID, const size_t size);
+    void writeFrameClassic(const uint8_t FrameID, const size_t size);
 
     /// switches the operational mode of TJA1020 chip
     /// @param mode target mode
-    void setMode(TJA1020_Mode mode);
+    void setMode(const TJA1020_Mode mode);
     /// Defines standard slope rate, when using to the bus
     /// @param slope "NormalSlope" or "LowSlope" is only valid
-    void setSlope(TJA1020_Mode slope);
+    void setSlope(const TJA1020_Mode slope);
 
 private:
     TJA1020_Mode _writingSlope = NormalSlope;
