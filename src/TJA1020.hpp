@@ -15,7 +15,8 @@
 class Lin_TJA1020 : public Lin_Interface
 {
 public:
-    enum TJA1020_Mode {
+    enum TJA1020_Mode
+    {
         Sleep,
         NormalSlope,
         LowSlope

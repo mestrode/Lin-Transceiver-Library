@@ -118,7 +118,7 @@ void Lin_TJA1020::setMode(const TJA1020_Mode mode)
         break;
 
     default: // = Sleep
-        // no direct step from Standby to Sleep, but we don't know if we're in 
+        // no direct step from Standby to Sleep, but we don't know if we're in
         // we're going over _writingSlope
         setMode(_writingSlope);
 
@@ -135,10 +135,10 @@ void Lin_TJA1020::setMode(const TJA1020_Mode mode)
 
         // ensure pin level while sleeping
 #ifdef ESP32
-        pinMode(_tx_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
+        pinMode(_tx_pin, INPUT_PULLDOWN);   // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
         pinMode(_nslp_pin, INPUT_PULLDOWN); // ensure Low level while in sleep mode
 #else
-        pinMode(_tx_pin, INPUT); // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
+        pinMode(_tx_pin, INPUT);   // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
         pinMode(_nslp_pin, INPUT); // ensure Low level while in sleep mode
 #endif
 
@@ -149,10 +149,11 @@ void Lin_TJA1020::setMode(const TJA1020_Mode mode)
 } // void Lin_TJA1020::setMode(TJA1020_Mode newMode)
 
 /// Defines standard slope, to be used, when writing to the bus
-void Lin_TJA1020::setSlope(const TJA1020_Mode slope) {
-  _writingSlope = slope;
-  if (_writingSlope == Sleep)
-  {
-      _writingSlope = NormalSlope;
-  }
+void Lin_TJA1020::setSlope(const TJA1020_Mode slope)
+{
+    _writingSlope = slope;
+    if (_writingSlope == Sleep)
+    {
+        _writingSlope = NormalSlope;
+    }
 }
