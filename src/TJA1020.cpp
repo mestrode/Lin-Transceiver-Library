@@ -40,7 +40,7 @@ bool Lin_TJA1020::readFrame(const uint8_t FrameID)
 }
 
 /// Sends a Lin 2.0 Frame
-void Lin_TJA1020::writeFrame(const uint8_t FrameID, const size_t size)
+bool Lin_TJA1020::writeFrame(const uint8_t FrameID, const size_t size)
 {
     setMode(_writingSlope);
     return Lin_Interface::writeFrame(FrameID, size);

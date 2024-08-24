@@ -29,7 +29,7 @@ public:
     Lin_TJA1020(const int uart_nr, const uint32_t _baud, const int8_t rxPin, const int8_t txPin, const int8_t nslpPin);
 
     bool readFrame(const uint8_t FrameID);
-    void writeFrame(const uint8_t FrameID, const size_t size);
+    bool writeFrame(const uint8_t FrameID, const size_t size);
     void writeFrameClassic(const uint8_t FrameID, const size_t size);
 
     /// switches the operational mode of TJA1020 chip
