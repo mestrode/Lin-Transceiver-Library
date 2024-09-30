@@ -1,13 +1,15 @@
 #include <Arduino.h>
 #include <TJA1020.hpp>
+#include <LinFrameTransfer.hpp>
 
-#define PIN_NSLP 23
+constexpr int PIN_NSLP = 23;
 
 // using a TJA1020 chip
 // using UART 1 for LinBus
 // configure 19200 Baud
 // using GPIO 23 for /NSLP pin of TJA1020
-Lin_TJA1020 LinBus(1, 19200, PIN_NSLP);
+Lin_TJA1020 linBus(1, 19200, PIN_NSLP);
+LinFrameTransfer linMaster(linBus, Serial, 2);
 
 // data to be filled by bus request
 float Cap_Max = 0.0;
@@ -23,29 +25,40 @@ void setup()
 
   // configure slope rate
   Serial.print("configure low slope rate of TJA1020\n");
-  LinBus.setSlope(LinBus.LowSlope);
+  linBus.setSlope(Lin_TJA1020::Mode::LowSlope);
 }
 
 bool readLinData()
 {
-  // all handling of
-  bool chkSumValid = LinBus.readFrame(0x2C);
-  if (chkSumValid)
+  auto rawData = linMaster.readFrame(0x2C);
+  if (!rawData)
   {
-    // Data now avaliabele in LinBus.LinMessage
-
-    // decode some bytes (incl. rescaling)
-    Cap_Max = (float((LinBus.LinMessage[1] << 8) + LinBus.LinMessage[0])) / 10;
-    Cap_Available = (float((LinBus.LinMessage[3] << 8) + LinBus.LinMessage[2])) / 10;
-
-    // receive a single byte
-    Cap_Configured = LinBus.LinMessage[4];
-
-    // decode flags within a byte
-    CalibByte = LinBus.LinMessage[5];
-    CalibrationDone = bitRead(LinBus.LinMessage[5], 0);
+    return false;
   }
-  return chkSumValid;
+
+  // Data now avaliabele in data.value() or at address data.data()
+  struct ResponseCap {
+    uint8_t capMax_LSB;
+    uint8_t capMax_MSB;
+    uint8_t capAvaliable_LSB;
+    uint8_t capAvaliable_MSB;
+    uint8_t capConfigured;
+    uint8_t capFlags;
+  };
+  ResponseCap* data = reinterpret_cast<ResponseCap*>(rawData.value().data());
+
+  // decode some bytes (incl. rescaling)
+  Cap_Max = ((data->capMax_MSB << 8) + data->capMax_LSB) / 10;
+  Cap_Available = (float((data->capAvaliable_MSB << 8) + data->capAvaliable_LSB)) / 10;
+
+  // receive a single byte
+  Cap_Configured = data->capConfigured;
+
+  // decode flags within a byte
+  CalibByte = data->capFlags;
+  CalibrationDone = bitRead(data->capFlags, 0);
+
+  return true;
 }
 
 void loop()
@@ -63,5 +76,5 @@ void loop()
   delay(5000);
 
   //shut TJA1020 down, this also releases the INH pin.
-  LinBus.setSlope(LinBus.Sleep);
+  linBus.setSlope(Lin_TJA1020::Mode::Sleep);
 }
