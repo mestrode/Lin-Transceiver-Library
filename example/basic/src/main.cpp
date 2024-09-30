@@ -2,13 +2,17 @@
 #include <TJA1020.hpp>
 #include <LinFrameTransfer.hpp>
 
-constexpr int PIN_NSLP = 23;
+constexpr int LIN_UART_NO = 1;
+constexpr int LIN_BAUD = 19200;
+constexpr int LIN_PIN_RX = RX1;
+constexpr int LIN_PIN_TX = TX1;
+constexpr int LIN_PIN_NSLP = 23;
 
 // using a TJA1020 chip
 // using UART 1 for LinBus
 // configure 19200 Baud
 // using GPIO 23 for /NSLP pin of TJA1020
-Lin_TJA1020 linBus(1, 19200, PIN_NSLP);
+Lin_TJA1020 linBus(LIN_UART_NO, LIN_BAUD, LIN_PIN_RX, LIN_PIN_TX, LIN_PIN_NSLP);
 LinFrameTransfer linMaster(linBus, Serial, 2);
 
 // data to be filled by bus request
