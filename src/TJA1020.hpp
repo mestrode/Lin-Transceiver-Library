@@ -6,7 +6,7 @@
 //
 // Requires class Lin_Interface: https://github.com/mestrode/Lin-Interface-Library
 //
-// Tested with ESP32
+// Datasheet TJA1020: https://www.nxp.com/docs/en/data-sheet/TJA1020.pdf
 
 #pragma once
 
@@ -24,8 +24,27 @@ public:
     enum class Mode
     {
         Sleep,
+        // after Power on or setMode(Sleep)
+    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER  REMARKS
+    // 0    weak pull-down                     floating floating off          no wake-up request detected
+    //                                                                        TERM = high-ohmic
+
         NormalSlope,
-        LowSlope
+    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER
+    // 1    weak pull-down                     active   HIGH     normal slope TERM = 30k
+
+        LowSlope,
+    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER
+    // 1    weak pull-down                     active   HIGH     low slope    TERM = 30k
+
+        StandbyWakeupRemote,
+        StandbyWakeupLocal
+    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER  REMARKS
+    // 0    weak pull-down if remote wake-up;  LOW      HIGH     off          wake-up request detected;
+    //      strong pull-down if local wake-up;                                in this mode the microcontroller
+    //      note 2                                                            can read the wake-up source:
+    //                                                                        remote or local wake-up
+    //                                                                        TERM = 30k
     };
 
     /// provides HW-Lin Interface via TJA1020 Chip
@@ -37,13 +56,10 @@ public:
     /// switches the operational mode of TJA1020 chip
     /// @param mode target mode
     void setMode(const Mode mode);
-    /// Defines standard slope rate, when using to the bus
-    /// @param slope "NormalSlope" or "LowSlope" is only valid
-    void setSlope(const Mode slope);
+    Mode getMode();
 
 private:
-    Mode _writingSlope = Mode::NormalSlope;
-    Mode _currentMode = Mode::Sleep;
+    Mode _currentMode = Mode::Sleep; // after power on
     int8_t txPin;
     int8_t nslpPin;
 };

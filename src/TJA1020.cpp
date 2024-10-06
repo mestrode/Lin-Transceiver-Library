@@ -44,7 +44,7 @@ void Lin_TJA1020::setMode(const Mode mode)
 {
     // we don't need to act, if we're allready there
     // see "setMode(sleep)" in the switch below
-    if (mode == _currentMode)
+    if (mode == getMode())
     {
         return;
     }
@@ -103,7 +103,7 @@ void Lin_TJA1020::setMode(const Mode mode)
     default: // = Sleep
         // no direct step from Standby to Sleep, but we don't know if we're in
         // we're going over _writingSlope
-        setMode(_writingSlope);
+        setMode(Mode::NormalSlope);
 
         // rising edge on /SLP while TXD = 1
         digitalWrite(txPin, HIGH);
@@ -131,12 +131,30 @@ void Lin_TJA1020::setMode(const Mode mode)
     }
 } // void Lin_TJA1020::setMode(TJA1020_Mode newMode)
 
-/// Defines standard slope, to be used, when writing to the bus
-void Lin_TJA1020::setSlope(const Mode slope)
+Lin_TJA1020::Mode Lin_TJA1020::getMode()
 {
-    _writingSlope = slope;
-    if (_writingSlope == Mode::Sleep)
-    {
-        _writingSlope = Mode::NormalSlope;
+    if (_currentMode == Mode::Sleep) {
+
+        // test MCU PullUp against TJA Pulldown
+        pinMode(txPin, INPUT);
+        delayMicroseconds(1); // settle time
+        bool hasWeakPullDn = !digitalRead(txPin);
+
+        pinMode(txPin, INPUT_PULLUP);
+        delayMicroseconds(1); // settle time
+        bool hasStrongPullDn = !digitalRead(txPin);
+
+        // revert setting
+        pinMode(txPin, INPUT);
+
+        if (hasWeakPullDn && !hasStrongPullDn)
+        {
+            // TXD has weak pull-down on remote wake-up
+            _currentMode = Mode::StandbyWakeupRemote;
+        } else {
+            // TXD has strong pull-down on local wake-up (caused by /WAKE pin)
+            _currentMode = Mode::StandbyWakeupLocal;
+        }
     }
+    return _currentMode;
 }
