@@ -4,8 +4,6 @@
 // Copyright mestrode <ardlib@mestro.de>
 // Original Source: "https://github.com/mestrode/Lin-Transceiver-Library"
 //
-// Requires class Lin_Interface: https://github.com/mestrode/Lin-Interface-Library
-//
 // Datasheet TJA1020: https://www.nxp.com/docs/en/data-sheet/TJA1020.pdf
 
 #pragma once
@@ -21,45 +19,36 @@
 class Lin_TJA1020 : public HardwareSerial
 {
 public:
+    static constexpr auto BAUD_DEFAULT = 19200;
+
     enum class Mode
     {
         Sleep,
-        // after Power on or setMode(Sleep)
-    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER  REMARKS
-    // 0    weak pull-down                     floating floating off          no wake-up request detected
-    //                                                                        TERM = high-ohmic
-
         NormalSlope,
-    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER
-    // 1    weak pull-down                     active   HIGH     normal slope TERM = 30k
-
         LowSlope,
-    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER
-    // 1    weak pull-down                     active   HIGH     low slope    TERM = 30k
-
-        StandbyWakeupRemote,
-        StandbyWakeupLocal
-    // NSLP TXD (OUTPUT)                       RXD      INH      TRANSMITTER  REMARKS
-    // 0    weak pull-down if remote wake-up;  LOW      HIGH     off          wake-up request detected;
-    //      strong pull-down if local wake-up;                                in this mode the microcontroller
-    //      note 2                                                            can read the wake-up source:
-    //                                                                        remote or local wake-up
-    //                                                                        TERM = 30k
+        Standby
     };
 
-    /// provides HW-Lin Interface via TJA1020 Chip
-    /// @param uart_nr Index of HW UART to be used (0..2)
-    /// @param baud Baud rate for RX/TX (0 = default 19200 baud)
-    /// @param nslpPin /SLP Pin to control TJA1020
-    Lin_TJA1020(const int _uart_nr, const uint32_t _baud, const int8_t _rxPin, const int8_t _txPin, const int8_t _nslpPin);
+    enum class WakeUpSource
+    {
+        unknown,
+        local,
+        remote
+    };
 
-    /// switches the operational mode of TJA1020 chip
-    /// @param mode target mode
+    Lin_TJA1020(const int _uart_nr, const uint32_t _baud, const int8_t _rxPin, const int8_t _txPin, const int8_t _nslpPin, const Mode _mode = Mode::NormalSlope);
+
     void setMode(const Mode mode);
     Mode getMode();
+    WakeUpSource getWakeupReason();
 
 private:
+    static constexpr int T_SETTLE = 10;
+    static constexpr int T_GOTOSLEEP = 10; // Spec: typ 5 us, max 10 us required by chip
+    static constexpr int T_GOTONORM = 10; // Spec: typ 5 us, max 10 us required by chip
+
     Mode _currentMode = Mode::Sleep; // after power on
+    int8_t rxPin;
     int8_t txPin;
     int8_t nslpPin;
 };

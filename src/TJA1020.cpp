@@ -4,9 +4,7 @@
 // Copyright mestrode <ardlib@mestro.de>
 // Original Source: "https://github.com/mestrode/Lin-Transceiver-Library"
 //
-// Requires class Lin_Interface: https://github.com/mestrode/Lin-Interface-Library
-//
-// Tested with ESP32
+// Datasheet TJA1020: https://www.nxp.com/docs/en/data-sheet/TJA1020.pdf
 
 #include "TJA1020.hpp"
 
@@ -18,23 +16,30 @@
     #include <Arduino.h>
 #endif
 
-constexpr auto BAUD_DEFAULT = 19200;
-
-//-----------------------------------------------------------------------------
-// constructor
-
-/// Provides HW UART via TJA1020 Chip
-Lin_TJA1020::Lin_TJA1020(const int _uart_nr, const uint32_t _baud, const int8_t _rxPin, const int8_t _txPin, const int8_t _nslpPin) :
+/// @brief Provides HAL for UART via TJA1020 Chip
+/// @param _uart_nr uart for LIN
+/// @param _baud max 20k. default 19.200 baud
+/// @param _rxPin GPIO
+/// @param _txPin GPIO
+/// @param _nslpPin GPIO
+/// @param _mode initial mode of statemachine within TJA
+Lin_TJA1020::Lin_TJA1020(const int _uart_nr, const uint32_t _baud, const int8_t _rxPin, const int8_t _txPin, const int8_t _nslpPin, const Mode _mode) :
     HardwareSerial(_uart_nr),
+    rxPin(_rxPin),
     txPin(_txPin),
     nslpPin(_nslpPin)
 {
-    // use default baud rate, if not specified
-// TODO:    HardwareSerial::baudRate = _baud ? _baud : BAUD_DEFAULT;
-    HardwareSerial::setPins(_rxPin, _txPin);
-}
+    pinMode(nslpPin, OUTPUT);
+    digitalWrite(nslpPin, LOW);
 
-//-----------------------------------------------------------------------------
+    pinMode(rxPin, INPUT_PULLUP);
+    pinMode(txPin, OUTPUT);
+    HardwareSerial::setPins(rxPin, txPin);
+
+    HardwareSerial::updateBaudRate(_baud);
+
+    setMode(_mode);
+}
 
 /// does control sequences to switch from one to another operational mode of the chip
 /// NormalSlope, LowSlope for writing operation;
@@ -49,112 +54,105 @@ void Lin_TJA1020::setMode(const Mode mode)
         return;
     }
 
-    pinMode(txPin, OUTPUT);   //  TX  Signal to LIN Tranceiver
-    pinMode(nslpPin, OUTPUT); // /SLP Signal to LIN Tranceiver
-
     // Statemachine des TJA1020 von [SLEEP] nach [NORMAL SLOPE MODE] ändern
-    switch (mode)
-    {
-    case Mode::NormalSlope:
+    if (mode == Mode::NormalSlope) {
         if (_currentMode == Mode::LowSlope)
         {
             // no direct step from LowSlope to NormalSlope
+            // TODO: no valid transission, go over SLEEP may cut power
             setMode(Mode::Sleep);
         }
 
         // rising edge on /SLP while TXD = 1
         digitalWrite(txPin, HIGH);
-        delayMicroseconds(10); // ensure signal to settle
+        delayMicroseconds(T_SETTLE);
 
-        // create rising edge
         digitalWrite(nslpPin, LOW);
-        delayMicroseconds(15); //  ensure t_gotosleep (min. 10us)
+        delayMicroseconds(T_SETTLE);
         digitalWrite(nslpPin, HIGH);
-        delayMicroseconds(15); // ensure t_gotonorm (min. 10us)
+        delayMicroseconds(T_GOTONORM);
 
         // [Normal Slope Mode] reached
         _currentMode = Mode::NormalSlope;
-        break;
+        return;
+    }
 
-    case Mode::LowSlope:
+    if (mode == Mode::LowSlope) {
         if (_currentMode == Mode::NormalSlope)
         {
             // no direct step from NormalSlope to LowSlope
+            // TODO: no valid transission, go over SLEEP may cut power
             setMode(Mode::Sleep);
         }
 
         // rising edge on /SLP while TXD = 0
         digitalWrite(txPin, LOW);
-        delayMicroseconds(10); // ensure signal to settle
+        delayMicroseconds(T_SETTLE);
 
-        // create rising edge
         digitalWrite(nslpPin, LOW);
-        delayMicroseconds(15); //  ensure t_gotosleep (min. 10us)
+        delayMicroseconds(T_SETTLE);
         digitalWrite(nslpPin, HIGH);
-        delayMicroseconds(15); // ensure t_gotonorm (min. 10us)
+        delayMicroseconds(T_GOTONORM);
 
-        // release tx pin, to avoid occupation of Lin Bus
-        digitalWrite(txPin, HIGH);
+        // release tx pin (active Low), to avoid occupation of Lin Bus
+        digitalWrite(txPin, LOW);
 
         // [Low Slope Mode] reached
         _currentMode = Mode::LowSlope;
-        break;
-
-    default: // = Sleep
-        // no direct step from Standby to Sleep, but we don't know if we're in
-        // we're going over _writingSlope
-        setMode(Mode::NormalSlope);
-
-        // rising edge on /SLP while TXD = 1
-        digitalWrite(txPin, HIGH);
-        delayMicroseconds(10); // ensure signal to settle
-
-        // create falling edge
-        digitalWrite(nslpPin, HIGH);
-        delayMicroseconds(15); //  ensure t_gotosleep (min. 10us)
-        digitalWrite(nslpPin, LOW);
-        delayMicroseconds(15); // ensure t_gotonorm (min. 10us)
-        // INH will be shut down by constant low, chip will go into sleep mode
-
-        // ensure pin level while sleeping
-#ifdef ESP32
-        pinMode(txPin, INPUT_PULLDOWN);   // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
-        pinMode(nslpPin, INPUT_PULLDOWN); // ensure Low level while in sleep mode
-#else
-        pinMode(txPin, INPUT);   // ensure Low level while in sleep mode (since TJA1020 has internally a fixed pulldown)
-        pinMode(nslpPin, INPUT); // ensure Low level while in sleep mode
-#endif
-
-        // [Sleep] reached
-        _currentMode = Mode::Sleep;
-        break;
+        return;
     }
-} // void Lin_TJA1020::setMode(TJA1020_Mode newMode)
+
+    // default: mode == Mode::Sleep or Mode::Standby
+
+    // no direct step from Standby to Sleep
+    if (_currentMode == Mode::Standby) {
+        // we're going over LowSlope
+        setMode(Mode::LowSlope);
+    }
+
+    // rising edge on /SLP while TXD = 1
+    digitalWrite(txPin, HIGH);
+    delayMicroseconds(T_SETTLE);
+
+    digitalWrite(nslpPin, HIGH);
+    delayMicroseconds(T_SETTLE);
+
+    digitalWrite(nslpPin, LOW);
+//! avoid another sleep, cause chip will go into sleep mode soon
+//! --> INH will float = this may cause power cut off
+//! delayMicroseconds(T_GOTOSLEEP);
+    
+//! since TJA1020 has internally a fixed pulldown ensure Low level while in sleep mode
+//! digitalWrite(txPin, LOW);
+
+    _currentMode = Mode::Sleep;
+}
 
 Lin_TJA1020::Mode Lin_TJA1020::getMode()
 {
-    if (_currentMode == Mode::Sleep) {
-
-        // test MCU PullUp against TJA Pulldown
-        pinMode(txPin, INPUT);
-        delayMicroseconds(1); // settle time
-        bool hasWeakPullDn = !digitalRead(txPin);
-
-        pinMode(txPin, INPUT_PULLUP);
-        delayMicroseconds(1); // settle time
-        bool hasStrongPullDn = !digitalRead(txPin);
-
-        // revert setting
-        pinMode(txPin, INPUT);
-
-        if (hasWeakPullDn && !hasStrongPullDn)
-        {
-            // TXD has weak pull-down on remote wake-up
-            _currentMode = Mode::StandbyWakeupRemote;
-        } else {
-            // TXD has strong pull-down on local wake-up (caused by /WAKE pin)
-            _currentMode = Mode::StandbyWakeupLocal;
-        }
-    }
     return _currentMode;
+}
+
+/// @brief  returns Wakeup Reason, this only possible after wakeup, before setMode() (standby mode will be detected)
+/// @return wake-up reason
+Lin_TJA1020::WakeUpSource Lin_TJA1020::getWakeupReason()
+{
+    // only in standby mode TXD pull-down can be tested
+
+    // in Standby mode: /SLP must be low AND RXD must be low
+    // --> equal to: /SLP is high OR RXD is high
+    if (digitalRead(nslpPin) || digitalRead(rxPin)) {
+        return WakeUpSource::unknown;
+    }
+    _currentMode == Mode::Standby;
+
+    // test MCU pullup vs. TJA (weak) pull-down
+    pinMode(txPin, INPUT_PULLUP);
+    delayMicroseconds(T_SETTLE);
+    bool hasTxWeakPullDn = digitalRead(txPin);
+    // revert setting
+    pinMode(txPin, OUTPUT);
+
+    // TXD has weak pull-down on remote wake-up
+    return hasTxWeakPullDn ? WakeUpSource::remote: WakeUpSource::local;
 }
