@@ -8,13 +8,7 @@
 
 #pragma once
 
-#ifdef UNIT_TEST
-    #include "mock_Arduino.h"
-    #include "mock_HardwareSerial.h"
-    using HardwareSerial = mock_HardwareSerial;
-#else
-    #include <Arduino.h>
-#endif
+#include <Arduino.h>
 
 class Lin_TJA1020 : public HardwareSerial
 {
@@ -51,4 +45,8 @@ private:
     int8_t rxPin;
     int8_t txPin;
     int8_t nslpPin;
+
+    void gotoSleepMode();
+    void gotoLowSlope();
+    void gotoNormalSlope();
 };

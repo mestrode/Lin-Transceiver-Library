@@ -8,13 +8,7 @@
 
 #include "TJA1020.hpp"
 
-#ifdef UNIT_TEST
-    #include "mock_HardwareSerial.h"
-    using HardwareSerial = mock_HardwareSerial;
-    #include "mock_delay.h"
-#else
-    #include <Arduino.h>
-#endif
+#include <Arduino.h>
 
 /// @brief Provides HAL for UART via TJA1020 Chip
 /// @param _uart_nr uart for LIN
