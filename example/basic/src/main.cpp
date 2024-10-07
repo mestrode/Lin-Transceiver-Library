@@ -8,11 +8,11 @@ constexpr int LIN_PIN_RX = RX1;
 constexpr int LIN_PIN_TX = TX1;
 constexpr int LIN_PIN_NSLP = 23;
 
-// using a TJA1020 chip
-// using UART 1 for LinBus
-// configure 19200 Baud
-// using GPIO 23 for /NSLP pin of TJA1020
-Lin_TJA1020 linBus(LIN_UART_NO, LIN_BAUD, LIN_PIN_RX, LIN_PIN_TX, LIN_PIN_NSLP);
+// Hardware Abstraction Layer for TJA1020 and UART
+Lin_TJA1020 linBus(LIN_UART_NO, LIN_BAUD, LIN_PIN_RX, LIN_PIN_TX, LIN_PIN_NSLP, Lin_TJA1020::Mode::LowSlope);
+
+// Lin Stack
+// debug messages on serial, 2 = verbose
 LinFrameTransfer linMaster(linBus, Serial, 2);
 
 // data to be filled by bus request
@@ -21,16 +21,6 @@ float Cap_Available = 0.0;
 uint8_t Cap_Configured = 0;
 uint8_t CalibByte = 0x00;
 bool CalibrationDone = false;
-
-void setup()
-{
-  // Serial represents Serial(0)
-  Serial.begin(115200);
-
-  // configure slope rate
-  Serial.print("configure low slope rate of TJA1020\n");
-  linBus.setSlope(Lin_TJA1020::Mode::LowSlope);
-}
 
 bool readLinData()
 {
@@ -65,8 +55,14 @@ bool readLinData()
   return true;
 }
 
-void loop()
+void setup()
 {
+  // Serial represents Serial(0)
+  Serial.begin(115200);
+
+  // configure slope rate
+  Serial.print("configure low slope rate of TJA1020\n");
+
   if (readLinData())
   {
     Serial.print("Data reveived:\n");
@@ -77,8 +73,15 @@ void loop()
     Serial.printf("  CalibrationDone = %d\n", CalibrationDone);
   }
 
-  delay(5000);
+  delay(1000);
+
+  Serial.println("TJA1020: send to sleep");
 
   //shut TJA1020 down, this also releases the INH pin.
-  linBus.setSlope(Lin_TJA1020::Mode::Sleep);
+  linBus.setMode(Lin_TJA1020::Mode::Sleep);
+}
+
+void loop()
+{
+  delay(5000);
 }
