@@ -28,9 +28,11 @@ Lin_TJA1020::Lin_TJA1020(const int _uart_nr, const uint32_t _baud, const int8_t 
 
     pinMode(rxPin, INPUT_PULLUP);
     pinMode(txPin, OUTPUT);
-    HardwareSerial::setPins(rxPin, txPin);
+    HardwareSerial::setRX(rxPin);
+    HardwareSerial::setTX(txPin);
 
-    HardwareSerial::updateBaudRate(_baud);
+    HardwareSerial::end();
+    HardwareSerial::begin(_baud);
 
     setMode(_mode);
 }
